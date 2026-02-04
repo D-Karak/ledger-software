@@ -1,0 +1,55 @@
+{
+  "name": "radhakrishna-ledger",
+  "version": "1.0.0",
+  "description": "Professional Offline Desktop Ledger",
+  "author": "RadhaKrishna Ledger",
+  "main": "main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "start": "npm run build && electron .",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "dist": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.radhakrishna.ledger",
+    "productName": "RadhaKrishna Ledger",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "dir",
+      "forceCodeSigning": false
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "database.js",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**"
+    ]
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.2.13",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "electron": "^29.0.0",
+    "electron-builder": "^26.7.0",
+    "electron-packager": "^17.1.2",
+    "postcss": "^8.4.32",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3",
+    "vite": "^7.3.1"
+  }
+}

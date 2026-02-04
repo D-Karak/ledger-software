@@ -1,0 +1,5 @@
+{
+  "name": "Digital Daily Ledger",
+  "description": "An offline-first, professional accounting ledger that replaces physical notebooks. Features 34-row page paging, automatic running balances, and forward recalculation logic.",
+  "requestFramePermissions": []
+}
