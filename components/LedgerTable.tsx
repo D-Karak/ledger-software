@@ -66,15 +66,87 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
   };
 
   // Grand totals for the visible page
+
   const pageTotals = useMemo(() => {
     return currentEntries.reduce((acc, curr) => ({
+      opening: acc.opening + curr.openingBalance,
       credit: acc.credit + curr.credit,
-      debit: acc.debit + curr.debit
-    }), { credit: 0, debit: 0 });
+      debit: acc.debit + curr.debit,
+      closing: acc.closing + curr.closingBalance
+    }), { opening: 0, credit: 0, debit: 0, closing: 0 });
   }, [currentEntries]);
+
+  // Calculate totals for all pages
+  const allPageTotals = useMemo(() => {
+    const pages = [];
+    for (let i = 0; i < totalPages; i++) {
+      const pageStart = i * ROWS_PER_PAGE;
+      const pageEnd = (i + 1) * ROWS_PER_PAGE;
+      const pageEntries = sortedEntries.slice(pageStart, pageEnd);
+
+      const totals = pageEntries.reduce((acc, curr) => ({
+        opening: acc.opening + curr.openingBalance,
+        credit: acc.credit + curr.credit,
+        debit: acc.debit + curr.debit,
+        closing: acc.closing + curr.closingBalance
+      }), { opening: 0, credit: 0, debit: 0, closing: 0 });
+
+      pages.push({ pageIndex: i + 1, ...totals });
+    }
+    return pages;
+  }, [sortedEntries, totalPages]);
+
+  // Grand totals for the ENTIRE dataset (all pages combined)
+  const grandTotals = useMemo(() => {
+    return sortedEntries.reduce((acc, curr) => ({
+      opening: acc.opening + curr.openingBalance,
+      credit: acc.credit + curr.credit,
+      debit: acc.debit + curr.debit,
+      closing: acc.closing + curr.closingBalance
+    }), { opening: 0, credit: 0, debit: 0, closing: 0 });
+  }, [sortedEntries]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
+      {/* Sticky Grand Total Row */}
+      <div className=" bg-slate-900 text-white p-3 rounded-lg shadow-lg border border-slate-700 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center space-x-2">
+          <span className="p-1 bg-white/10 rounded-full">
+            <svg className="w-4 h-4 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </span>
+          <span className="font-bold text-sm tracking-wide">GRAND TOTAL</span>
+        </div>
+
+        <div className="flex items-center space-x-6 text-sm">
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Opening</span>
+            <span className="font-mono font-bold text-slate-100">{grandTotals.opening.toLocaleString()}</span>
+          </div>
+
+          <div className="w-px h-8 bg-slate-700"></div>
+
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
+            <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
+          </div>
+
+          <div className="w-px h-8 bg-slate-700"></div>
+
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-emerald-300 uppercase font-semibold">Total Credit</span>
+            <span className="font-mono font-bold text-emerald-400">{grandTotals.credit.toLocaleString()}</span>
+          </div>
+
+          <div className="w-px h-8 bg-slate-700"></div>
+
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-blue-300 uppercase font-semibold">Total Closing</span>
+            <span className="font-mono font-bold text-blue-400">{grandTotals.closing.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
           {Array.from({ length: totalPages || 1 }).map((_, i) => (
@@ -93,13 +165,23 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
 
         <div className="flex items-center space-x-6 text-xs font-medium text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Total Credit: <span className="text-emerald-700 font-bold ml-1">{pageTotals.credit.toLocaleString()}</span></span>
+            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span>Total Opening: <span className="text-slate-600 font-bold ml-1">{pageTotals.opening.toLocaleString()}</span></span>
           </div>
           <div className="w-px h-4 bg-slate-200"></div>
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-rose-500"></span>
             <span>Total Debit: <span className="text-rose-700 font-bold ml-1">{pageTotals.debit.toLocaleString()}</span></span>
+          </div>
+          <div className="w-px h-4 bg-slate-200"></div>
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Total Credit: <span className="text-emerald-700 font-bold ml-1">{pageTotals.credit.toLocaleString()}</span></span>
+          </div>
+          <div className="w-px h-4 bg-slate-200"></div>
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-slate-900"></span>
+            <span>Total Closing: <span className="text-slate-900 font-bold ml-1">{pageTotals.closing.toLocaleString()}</span></span>
           </div>
         </div>
       </div>
