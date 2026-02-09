@@ -33,7 +33,9 @@
     ]
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0"
+    "better-sqlite3": "^11.3.0",
+    "jspdf": "^4.1.0",
+    "jspdf-autotable": "^5.0.7"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.2.13",

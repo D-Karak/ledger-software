@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LedgerEntry, Customer } from '../types';
 import { api } from '../api';
+import { generatePDF } from '../utils/pdfGenerator';
 
 interface DashboardProps {
   entries: LedgerEntry[];
@@ -111,7 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
           <div className="w-px bg-slate-200 hidden md:block"></div>
 
           {/* Filters */}
-          <div className="flex-1 flex gap-4">
+          <div className="flex-1 flex gap-4 items-end">
             {reportView === 'customer' ? (
               <>
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -154,6 +155,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
                   <i className="fas fa-search"></i>
                   <span>Fetch</span>
                 </button>
+                <button
+                  onClick={() => generatePDF({
+                    reportType: 'customer',
+                    customers,
+                    entries: historyEntries,
+                    startDate,
+                    endDate,
+                    selectedCustomer: customers.find(c => c.id === selectedCustomerId)
+                  })}
+                  disabled={historyEntries.length === 0}
+                  className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
+                </button>
               </>
             ) : (
               <>
@@ -171,6 +187,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
                 >
                   <i className="fas fa-file-invoice"></i>
                   <span>Generate</span>
+                </button>
+                <button
+                  onClick={() => generatePDF({
+                    reportType: 'daily',
+                    customers,
+                    entries: dailyEntries,
+                    reportDate
+                  })}
+                  disabled={dailyEntries.length === 0}
+                  className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
               </>
             )}
