@@ -100,7 +100,7 @@ export const generatePDF = ({
     const useProvidedTotals = !!providedGrandTotals;
 
     if (reportType === 'daily') {
-        tableColumn = ["Sr.", "Customer Name", "Opening", "Debit (-)", "Total", "Credit (+)", "Closing"];
+        tableColumn = ["Sr.", "Customer Name", "Opening", "Credit (+)", "Total", "Debit (-)", "Closing"];
 
         // Sort by Customer Order
         const sortedEntries = [...entries].sort((a, b) => {
@@ -111,15 +111,15 @@ export const generatePDF = ({
 
         sortedEntries.forEach((entry, index) => {
             const customerName = customers.find(c => c.id === entry.customerId)?.name || 'Unknown';
-            const total = entry.openingBalance - entry.debit;
+            const total = entry.openingBalance + entry.credit;
 
             tableRows.push([
                 index + 1,
                 customerName,
                 entry.openingBalance.toLocaleString(),
-                entry.debit > 0 ? entry.debit.toLocaleString() : '-',
-                total.toLocaleString(),
                 entry.credit > 0 ? entry.credit.toLocaleString() : '-',
+                total.toLocaleString(),
+                entry.debit > 0 ? entry.debit.toLocaleString() : '-',
                 entry.closingBalance.toLocaleString()
             ]);
 
@@ -133,25 +133,23 @@ export const generatePDF = ({
         });
 
     } else if (reportType === 'customer') {
-        tableColumn = ["Sr.", "Date", "Opening", "Debit (-)", "Total", "Credit (+)", "Closing"];
+        tableColumn = ["Sr.", "Date", "Opening", "Credit (+)", "Total", "Debit (-)", "Closing"];
 
         entries.forEach((entry, index) => {
-            const total = entry.openingBalance - entry.debit;
+            const total = entry.openingBalance + entry.credit;
             tableRows.push([
                 index + 1,
                 formatDate(entry.date),
                 entry.openingBalance.toLocaleString(),
-                entry.debit > 0 ? entry.debit.toLocaleString() : '-',
-                total.toLocaleString(),
                 entry.credit > 0 ? entry.credit.toLocaleString() : '-',
+                total.toLocaleString(),
+                entry.debit > 0 ? entry.debit.toLocaleString() : '-',
                 entry.closingBalance.toLocaleString()
             ]);
             // Accumulate Totals only if not provided
             if (!useProvidedTotals) {
-                calculatedTotal.opening += entry.openingBalance;
                 calculatedTotal.debit += entry.debit;
                 calculatedTotal.credit += entry.credit;
-                calculatedTotal.closing += entry.closingBalance;
             }
         });
     }
@@ -181,9 +179,9 @@ export const generatePDF = ({
             0: { halign: 'center', cellWidth: 15 }, // Sr.
             1: { halign: 'left', fontStyle: 'bold' }, // Name / Date
             2: { halign: 'right' }, // Opening
-            3: { halign: 'right', textColor: [220, 38, 38] }, // Debit (Red)
+            3: { halign: 'right', textColor: [5, 150, 105] }, // Credit (Green)
             4: { halign: 'right', textColor: [100, 116, 139] }, // Total (Slate)
-            5: { halign: 'right', textColor: [5, 150, 105] }, // Credit (Green)
+            5: { halign: 'right', textColor: [220, 38, 38] }, // Debit (Red)
             6: { halign: 'right', fontStyle: 'bold' }, // Closing
         },
         didDrawPage: (data) => {
@@ -223,34 +221,52 @@ export const generatePDF = ({
     const startX = 60;
     const gap = 35;
 
-    // Opening
-    doc.setFontSize(8);
-    doc.setTextColor(100);
-    doc.text("Total Opening", startX, totalsY + 8);
-    doc.setFontSize(10);
-    doc.setTextColor(0);
-    doc.text(finalGrandTotal.opening.toLocaleString(), startX, totalsY + 16);
+    if (reportType === 'daily') {
+        // Opening
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text("Total Opening", startX, totalsY + 8);
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.text(finalGrandTotal.opening.toLocaleString(), startX, totalsY + 16);
 
-    // Debit
-    doc.setFontSize(8);
-    doc.setTextColor(220, 38, 38);
-    doc.text("Total Debit", startX + gap, totalsY + 8);
-    doc.setFontSize(10);
-    doc.text(finalGrandTotal.debit.toLocaleString(), startX + gap, totalsY + 16);
+        // Credit
+        doc.setFontSize(8);
+        doc.setTextColor(5, 150, 105);
+        doc.text("Total Credit", startX + gap, totalsY + 8);
+        doc.setFontSize(10);
+        doc.text(finalGrandTotal.credit.toLocaleString(), startX + gap, totalsY + 16);
 
-    // Credit
-    doc.setFontSize(8);
-    doc.setTextColor(5, 150, 105);
-    doc.text("Total Credit", startX + (gap * 2), totalsY + 8);
-    doc.setFontSize(10);
-    doc.text(finalGrandTotal.credit.toLocaleString(), startX + (gap * 2), totalsY + 16);
+        // Debit
+        doc.setFontSize(8);
+        doc.setTextColor(220, 38, 38);
+        doc.text("Total Debit", startX + (gap * 2), totalsY + 8);
+        doc.setFontSize(10);
+        doc.text(finalGrandTotal.debit.toLocaleString(), startX + (gap * 2), totalsY + 16);
 
-    // Closing
-    doc.setFontSize(8);
-    doc.setTextColor(0, 0, 150);
-    doc.text("Total Closing", startX + (gap * 3), totalsY + 8);
-    doc.setFontSize(10);
-    doc.text(finalGrandTotal.closing.toLocaleString(), startX + (gap * 3), totalsY + 16);
+        // Closing
+        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 150);
+        doc.text("Total Closing", startX + (gap * 3), totalsY + 8);
+        doc.setFontSize(10);
+        doc.text(finalGrandTotal.closing.toLocaleString(), startX + (gap * 3), totalsY + 16);
+    } else {
+        // Customer View: Only Credit and Debit
+
+        // Credit
+        doc.setFontSize(8);
+        doc.setTextColor(5, 150, 105);
+        doc.text("Total Credit", startX, totalsY + 8);
+        doc.setFontSize(10);
+        doc.text(finalGrandTotal.credit.toLocaleString(), startX, totalsY + 16);
+
+        // Debit
+        doc.setFontSize(8);
+        doc.setTextColor(220, 38, 38);
+        doc.text("Total Debit", startX + gap, totalsY + 8);
+        doc.setFontSize(10);
+        doc.text(finalGrandTotal.debit.toLocaleString(), startX + gap, totalsY + 16);
+    }
 
 
     // --- Save File ---

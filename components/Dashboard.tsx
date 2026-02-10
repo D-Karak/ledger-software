@@ -241,15 +241,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
               <div className="w-px h-8 bg-slate-700"></div>
 
               <div className="flex flex-col items-end">
-                <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
-                <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
+                <span className="text-[10px] text-emerald-300 uppercase font-semibold">Total Credit</span>
+                <span className="font-mono font-bold text-emerald-400">{grandTotals.credit.toLocaleString()}</span>
               </div>
 
               <div className="w-px h-8 bg-slate-700"></div>
 
               <div className="flex flex-col items-end">
-                <span className="text-[10px] text-emerald-300 uppercase font-semibold">Total Credit</span>
-                <span className="font-mono font-bold text-emerald-400">{grandTotals.credit.toLocaleString()}</span>
+                <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
+                <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
               </div>
 
               <div className="w-px h-8 bg-slate-700"></div>
@@ -285,13 +285,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
               </div>
               <div className="w-px h-4 bg-slate-200"></div>
               <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>Total Debit: <span className="text-rose-700 font-bold ml-1">{pageTotals.debit.toLocaleString()}</span></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Total Credit: <span className="text-emerald-700 font-bold ml-1">{pageTotals.credit.toLocaleString()}</span></span>
               </div>
               <div className="w-px h-4 bg-slate-200"></div>
               <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Total Credit: <span className="text-emerald-700 font-bold ml-1">{pageTotals.credit.toLocaleString()}</span></span>
+                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                <span>Total Debit: <span className="text-rose-700 font-bold ml-1">{pageTotals.debit.toLocaleString()}</span></span>
               </div>
               <div className="w-px h-4 bg-slate-200"></div>
               <div className="flex items-center space-x-2">
@@ -334,17 +334,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
             </div>
 
             <div className="flex items-center space-x-6 text-sm">
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Opening</span>
-                <span className="font-mono font-bold text-slate-100">{grandTotals.opening.toLocaleString()}</span>
-              </div>
-
-              <div className="w-px h-8 bg-slate-700"></div>
-
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
-                <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
-              </div>
 
               <div className="w-px h-8 bg-slate-700"></div>
 
@@ -356,9 +345,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
               <div className="w-px h-8 bg-slate-700"></div>
 
               <div className="flex flex-col items-end">
-                <span className="text-[10px] text-blue-300 uppercase font-semibold">Total Closing</span>
-                <span className="font-mono font-bold text-blue-400">{grandTotals.closing.toLocaleString()}</span>
+                <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
+                <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
               </div>
+
+              <div className="w-px h-8 bg-slate-700"></div>
+
             </div>
           </div>
         )}
@@ -370,9 +362,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
                 <th className="px-6 py-4 text-center w-16">Sr.</th>
                 <th className="px-6 py-4 text-left">{reportView === 'customer' ? 'Date' : 'Account Name'}</th>
                 <th className="px-6 py-4 text-right">Opening</th>
-                <th className="px-6 py-4 text-right text-rose-600">Debit (-)</th>
-                <th className="px-6 py-4 text-right text-slate-500">Total</th>
                 <th className="px-6 py-4 text-right text-emerald-600">Credit (+)</th>
+                <th className="px-6 py-4 text-right text-slate-500">Total</th>
+                <th className="px-6 py-4 text-right text-rose-600">Debit (-)</th>
                 <th className="px-6 py-4 text-right text-slate-900 bg-slate-100/50">Closing</th>
               </tr>
             </thead>
@@ -386,9 +378,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
                       {reportView === 'customer' ? e.date : (customers.find(c => c.id === e.customerId)?.name || 'N/A')}
                     </td>
                     <td className="px-6 py-3 text-right text-slate-500 font-mono">{e.openingBalance.toLocaleString()}</td>
-                    <td className="px-6 py-3 text-right text-rose-600 font-bold font-mono">{e.debit > 0 ? `-${e.debit.toLocaleString()}` : '-'}</td>
-                    <td className="px-6 py-3 text-right text-slate-500 font-mono font-medium">{(e.openingBalance - e.debit).toLocaleString()}</td>
                     <td className="px-6 py-3 text-right text-emerald-600 font-bold font-mono">{e.credit > 0 ? `+${e.credit.toLocaleString()}` : '-'}</td>
+                    <td className="px-6 py-3 text-right text-slate-500 font-mono font-medium">{(e.openingBalance + e.credit).toLocaleString()}</td>
+                    <td className="px-6 py-3 text-right text-rose-600 font-bold font-mono">{e.debit > 0 ? `-${e.debit.toLocaleString()}` : '-'}</td>
                     <td className="px-6 py-3 text-right font-bold text-slate-900 bg-slate-50/50 font-mono">{e.closingBalance.toLocaleString()}</td>
                   </tr>
                 )

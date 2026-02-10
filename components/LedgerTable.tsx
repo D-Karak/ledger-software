@@ -40,7 +40,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
       if (e.id === entryId) {
         const newEntry = { ...e, [field]: value };
         // Logic Switched: Debit Adds, Credit Subtracts
-        newEntry.closingBalance = newEntry.openingBalance - newEntry.debit + newEntry.credit;
+        newEntry.closingBalance = newEntry.openingBalance + newEntry.credit - newEntry.debit;
         return newEntry;
       }
       return e;
@@ -108,7 +108,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
-      {/* Sticky Grand Total Row */}
+      {/* Grand Total Row */}
       <div className=" bg-slate-900 text-white p-3 rounded-lg shadow-lg border border-slate-700 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-2">
           <span className="p-1 bg-white/10 rounded-full">
@@ -128,15 +128,15 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
           <div className="w-px h-8 bg-slate-700"></div>
 
           <div className="flex flex-col items-end">
-            <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
-            <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
+            <span className="text-[10px] text-emerald-300 uppercase font-semibold">Total Credit</span>
+            <span className="font-mono font-bold text-emerald-400">{grandTotals.credit.toLocaleString()}</span>
           </div>
 
           <div className="w-px h-8 bg-slate-700"></div>
 
           <div className="flex flex-col items-end">
-            <span className="text-[10px] text-emerald-300 uppercase font-semibold">Total Credit</span>
-            <span className="font-mono font-bold text-emerald-400">{grandTotals.credit.toLocaleString()}</span>
+            <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
+            <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
           </div>
 
           <div className="w-px h-8 bg-slate-700"></div>
@@ -170,14 +170,15 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
           </div>
           <div className="w-px h-4 bg-slate-200"></div>
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-            <span>Total Debit: <span className="text-rose-700 font-bold ml-1">{pageTotals.debit.toLocaleString()}</span></span>
-          </div>
-          <div className="w-px h-4 bg-slate-200"></div>
-          <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Total Credit: <span className="text-emerald-700 font-bold ml-1">{pageTotals.credit.toLocaleString()}</span></span>
           </div>
+          <div className="w-px h-4 bg-slate-200"></div>
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span>Total Debit: <span className="text-rose-700 font-bold ml-1">{pageTotals.debit.toLocaleString()}</span></span>
+          </div>
+
           <div className="w-px h-4 bg-slate-200"></div>
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-slate-900"></span>
@@ -193,9 +194,9 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
               <th className="px-4 py-3 text-center w-12 text-xs font-bold text-slate-400 uppercase tracking-wider border-r border-slate-200">No.</th>
               <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Customer Name</th>
               <th className="px-4 py-3 text-right w-32 text-xs font-bold text-slate-400 uppercase tracking-wider">Opening</th>
-              <th className="px-4 py-3 text-right w-32 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50/50 border-l border-rose-100">Debit (-)</th>
-              <th className="px-4 py-3 text-right w-32 text-xs font-bold text-slate-400 uppercase tracking-wider border-l border-slate-100">Total</th>
               <th className="px-4 py-3 text-right w-32 text-xs font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50/50 border-l border-emerald-100">Credit (+)</th>
+              <th className="px-4 py-3 text-right w-32 text-xs font-bold text-slate-400 uppercase tracking-wider border-l border-slate-100">Total</th>
+              <th className="px-4 py-3 text-right w-32 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50/50 border-l border-rose-100">Debit (-)</th>
               <th className="px-4 py-3 text-right w-32 text-xs font-bold text-slate-800 uppercase tracking-wider bg-slate-100/50 border-l border-slate-200">Closing</th>
             </tr>
           </thead>
@@ -211,26 +212,6 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
                   {/* Debit Input (Now First) */}
                   <td className="p-1 border-l border-slate-100 bg-rose-50/10 group-hover:bg-rose-50/30">
                     <input
-                      ref={el => { inputRefs.current[`${entry.id}_debit`] = el; }}
-                      type="number"
-                      disabled={isLocked}
-                      className="w-full h-full text-right px-3 py-1.5 rounded bg-transparent font-bold text-rose-600 focus:bg-white focus:ring-2 focus:ring-rose-500/50 outline-none transition-all placeholder-transparent"
-                      placeholder="0"
-                      value={entry.debit || ''}
-                      onChange={e => handleValueChange(entry.id, 'debit', Number(e.target.value))}
-                      onBlur={() => handleBlur(entry)}
-                      onKeyDown={e => handleKeyDown(e, idx, 'debit')}
-                    />
-                  </td>
-
-                  {/* Running Total (Opening - Debit) */}
-                  <td className="px-4 py-2.5 text-right text-slate-500 font-mono text-xs border-l border-slate-100 bg-slate-50/20">
-                    {(entry.openingBalance - entry.debit).toLocaleString()}
-                  </td>
-
-                  {/* Credit Input (Now Second) */}
-                  <td className="p-1 border-l border-slate-100 bg-emerald-50/10 group-hover:bg-emerald-50/30">
-                    <input
                       ref={el => { inputRefs.current[`${entry.id}_credit`] = el; }}
                       type="number"
                       disabled={isLocked}
@@ -240,6 +221,26 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ entries, customers, on
                       onChange={e => handleValueChange(entry.id, 'credit', Number(e.target.value))}
                       onBlur={() => handleBlur(entry)}
                       onKeyDown={e => handleKeyDown(e, idx, 'credit')}
+                    />
+                  </td>
+
+                  {/* Running Total (Opening - Debit) */}
+                  <td className="px-4 py-2.5 text-right text-slate-500 font-mono text-xs border-l border-slate-100 bg-slate-50/20">
+                    {(entry.openingBalance + entry.credit).toLocaleString()}
+                  </td>
+
+                  {/* Credit Input (Now Second) */}
+                  <td className="p-1 border-l border-slate-100 bg-emerald-50/10 group-hover:bg-emerald-50/30">
+                    <input
+                      ref={el => { inputRefs.current[`${entry.id}_debit`] = el; }}
+                      type="number"
+                      disabled={isLocked}
+                      className="w-full h-full text-right px-3 py-1.5 rounded bg-transparent font-bold text-rose-600 focus:bg-white focus:ring-2 focus:ring-rose-500/50 outline-none transition-all placeholder-transparent"
+                      placeholder="0"
+                      value={entry.debit || ''}
+                      onChange={e => handleValueChange(entry.id, 'debit', Number(e.target.value))}
+                      onBlur={() => handleBlur(entry)}
+                      onKeyDown={e => handleKeyDown(e, idx, 'debit')}
                     />
                   </td>
 
