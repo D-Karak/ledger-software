@@ -39,13 +39,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
   }, [sortedDailyEntries, reportCurrentPage, reportView]);
 
   const grandTotals = React.useMemo(() => {
+    if (reportView === 'customer') {
+      // Filter out days with no activity (no debit AND no credit)
+      const activeEntries = historyEntries.filter(e => e.debit > 0 || e.credit > 0);
+      return activeEntries.reduce((acc, curr) => ({
+        opening: acc.opening + curr.openingBalance,
+        credit: acc.credit + curr.credit,
+        debit: acc.debit + curr.debit,
+        closing: acc.closing + curr.closingBalance
+      }), { opening: 0, credit: 0, debit: 0, closing: 0 });
+    }
+
     return sortedDailyEntries.reduce((acc, curr) => ({
       opening: acc.opening + curr.openingBalance,
       credit: acc.credit + curr.credit,
       debit: acc.debit + curr.debit,
       closing: acc.closing + curr.closingBalance
     }), { opening: 0, credit: 0, debit: 0, closing: 0 });
-  }, [sortedDailyEntries]);
+  }, [sortedDailyEntries, historyEntries, reportView]);
 
   const pageTotals = React.useMemo(() => {
     return currentReportEntries.reduce((acc, curr) => ({
@@ -162,7 +173,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
                     entries: historyEntries,
                     startDate,
                     endDate,
-                    selectedCustomer: customers.find(c => c.id === selectedCustomerId)
+                    selectedCustomer: customers.find(c => c.id === selectedCustomerId),
+                    grandTotals: grandTotals
                   })}
                   disabled={historyEntries.length === 0}
                   className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
@@ -291,8 +303,65 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
         </>
       )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {/* Report Area */}
       <div className="card overflow-hidden min-h-[500px] flex flex-col">
+        {/* Grand Totals area */}
+        {reportView === 'customer' && historyEntries.length > 0 && (
+
+          <div className="bg-slate-900 text-white p-3 rounded-lg shadow-lg border border-slate-700 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <span className="p-1 bg-white/10 rounded-full">
+                <svg className="w-4 h-4 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </span>
+              <span className="font-bold text-sm tracking-wide">GRAND TOTAL</span>
+            </div>
+
+            <div className="flex items-center space-x-6 text-sm">
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Opening</span>
+                <span className="font-mono font-bold text-slate-100">{grandTotals.opening.toLocaleString()}</span>
+              </div>
+
+              <div className="w-px h-8 bg-slate-700"></div>
+
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] text-rose-300 uppercase font-semibold">Total Debit</span>
+                <span className="font-mono font-bold text-rose-400">{grandTotals.debit.toLocaleString()}</span>
+              </div>
+
+              <div className="w-px h-8 bg-slate-700"></div>
+
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] text-emerald-300 uppercase font-semibold">Total Credit</span>
+                <span className="font-mono font-bold text-emerald-400">{grandTotals.credit.toLocaleString()}</span>
+              </div>
+
+              <div className="w-px h-8 bg-slate-700"></div>
+
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] text-blue-300 uppercase font-semibold">Total Closing</span>
+                <span className="font-mono font-bold text-blue-400">{grandTotals.closing.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Table Content */}
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-sm">
@@ -338,7 +407,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ customers }) => {
               )}
             </tbody>
 
-            {/* Footer Totals (Removed as requested, redundant with top totals) */}
+            {/* Footer Totals */}
+
           </table>
         </div>
       </div>

@@ -11,6 +11,7 @@ interface PDFGeneratorProps {
     endDate?: string;
     selectedCustomer?: Customer;
     reportDate?: string;
+    grandTotals?: { opening: number, debit: number, credit: number, closing: number };
 }
 
 export const generatePDF = ({
@@ -20,15 +21,17 @@ export const generatePDF = ({
     startDate,
     endDate,
     selectedCustomer,
-    reportDate
+    reportDate,
+    grandTotals: providedGrandTotals
 }: PDFGeneratorProps) => {
     const doc = new jsPDF();
 
     // --- Constants ---
     const COMPANY_NAME = "RADHA KRISHNA FISH CENTRE";
+    const COMPANY_TAGLINE = "(Fish Marchent & Commission Agent)";
     const PROPRIETOR = "Proprietor: Samar Bag";
-    const ADDRESS = "Business Address: Narayan Chawk";
-    const PHONE = "Phone: 987654123";
+    const ADDRESS = "Dholgora(Kalisa), Irhpala, Ghatal, Paschim Medinipur"
+    const PHONE = "Mobile: 9800644582 // 8670367372 // 9679930081";
 
     // --- Helper Functions ---
     const formatDate = (dateString: string) => {
@@ -49,9 +52,10 @@ export const generatePDF = ({
         // 2. Proprietor & Address (Centered, Medium)
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        doc.text(PROPRIETOR, pageWidth / 2, 22, { align: "center" });
-        doc.text(ADDRESS, pageWidth / 2, 27, { align: "center" });
-        doc.text(PHONE, pageWidth / 2, 32, { align: "center" });
+        doc.text(COMPANY_TAGLINE, pageWidth / 2, 20, { align: "center" });
+        doc.text(PROPRIETOR, pageWidth / 2, 25, { align: "center" });
+        doc.text(ADDRESS, pageWidth / 2, 30, { align: "center" });
+        doc.text(PHONE, pageWidth / 2, 35, { align: "center" });
 
         // 3. Divider Line
         doc.setLineWidth(0.5);
@@ -89,7 +93,11 @@ export const generatePDF = ({
     // --- Table Generation ---
     let tableColumn: string[] = [];
     let tableRows: any[] = [];
-    let grandTotal = { opening: 0, debit: 0, credit: 0, closing: 0 };
+    // Use provided grand totals if available, otherwise initialize to zero (and calculate below if needed, though efficiently we should aim to pass it)
+    // Actually, if we pass grandTotals, we don't need to accumulate. But we still need to iterate to generate rows.
+    // If grandTotals IS provided, we will NOT accumulate.
+    let calculatedTotal = { opening: 0, debit: 0, credit: 0, closing: 0 };
+    const useProvidedTotals = !!providedGrandTotals;
 
     if (reportType === 'daily') {
         tableColumn = ["Sr.", "Customer Name", "Opening", "Debit (-)", "Total", "Credit (+)", "Closing"];
@@ -115,11 +123,13 @@ export const generatePDF = ({
                 entry.closingBalance.toLocaleString()
             ]);
 
-            // Accumulate Totals
-            grandTotal.opening += entry.openingBalance;
-            grandTotal.debit += entry.debit;
-            grandTotal.credit += entry.credit;
-            grandTotal.closing += entry.closingBalance;
+            // Accumulate Totals only if not provided
+            if (!useProvidedTotals) {
+                calculatedTotal.opening += entry.openingBalance;
+                calculatedTotal.debit += entry.debit;
+                calculatedTotal.credit += entry.credit;
+                calculatedTotal.closing += entry.closingBalance;
+            }
         });
 
     } else if (reportType === 'customer') {
@@ -136,13 +146,17 @@ export const generatePDF = ({
                 entry.credit > 0 ? entry.credit.toLocaleString() : '-',
                 entry.closingBalance.toLocaleString()
             ]);
-            // Accumulate Totals (Logic might vary for Statement, usually we just want the running balance, but summing columns is fine for analysis)
-            grandTotal.opening += entry.openingBalance;
-            grandTotal.debit += entry.debit;
-            grandTotal.credit += entry.credit;
-            grandTotal.closing += entry.closingBalance;
+            // Accumulate Totals only if not provided
+            if (!useProvidedTotals) {
+                calculatedTotal.opening += entry.openingBalance;
+                calculatedTotal.debit += entry.debit;
+                calculatedTotal.credit += entry.credit;
+                calculatedTotal.closing += entry.closingBalance;
+            }
         });
     }
+
+    const finalGrandTotal = providedGrandTotals || calculatedTotal;
 
     // --- AutoTable ---
     autoTable(doc, {
@@ -215,34 +229,34 @@ export const generatePDF = ({
     doc.text("Total Opening", startX, totalsY + 8);
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(grandTotal.opening.toLocaleString(), startX, totalsY + 16);
+    doc.text(finalGrandTotal.opening.toLocaleString(), startX, totalsY + 16);
 
     // Debit
     doc.setFontSize(8);
     doc.setTextColor(220, 38, 38);
     doc.text("Total Debit", startX + gap, totalsY + 8);
     doc.setFontSize(10);
-    doc.text(grandTotal.debit.toLocaleString(), startX + gap, totalsY + 16);
+    doc.text(finalGrandTotal.debit.toLocaleString(), startX + gap, totalsY + 16);
 
     // Credit
     doc.setFontSize(8);
     doc.setTextColor(5, 150, 105);
     doc.text("Total Credit", startX + (gap * 2), totalsY + 8);
     doc.setFontSize(10);
-    doc.text(grandTotal.credit.toLocaleString(), startX + (gap * 2), totalsY + 16);
+    doc.text(finalGrandTotal.credit.toLocaleString(), startX + (gap * 2), totalsY + 16);
 
     // Closing
     doc.setFontSize(8);
     doc.setTextColor(0, 0, 150);
     doc.text("Total Closing", startX + (gap * 3), totalsY + 8);
     doc.setFontSize(10);
-    doc.text(grandTotal.closing.toLocaleString(), startX + (gap * 3), totalsY + 16);
+    doc.text(finalGrandTotal.closing.toLocaleString(), startX + (gap * 3), totalsY + 16);
 
 
     // --- Save File ---
     const fileName = reportType === 'daily'
         ? `Daily_Ledger_${reportDate}.pdf`
-        : `Statement_${selectedCustomer?.name}_${new Date().toISOString().split('T')[0]}.pdf`;
+        : `Statement_${selectedCustomer?.name}_${startDate && endDate ? startDate + "_" + endDate : new Date().toISOString().split('T')[0]}.pdf`;
 
     doc.save(fileName);
 };
